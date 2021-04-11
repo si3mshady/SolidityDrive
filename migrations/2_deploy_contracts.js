@@ -1,5 +1,6 @@
-var SolidityDrive = artifacts.require("./SolidityDrive.sol");
+const SolidityDrive = artifacts.require('SolidityDrive.sol')
 
-module.exports = function(deployer) {
-  deployer.deploy(SolidityDrive);
+module.exports = function(_deployer) {
+  // Use deployer to state migration tasks.
+  _deployer.deploy(SolidityDrive)
 };

@@ -41,6 +41,7 @@ contract SolidityDrive {
         return (file.hash, file.fileName, file.fileType, file.date);
     }
 
+    // function will determine the number of files available, so the list can be looped through.
     function getLength() public view returns (uint256) {
         return files[msg.sender].length;
     }
