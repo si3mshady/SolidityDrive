@@ -4,6 +4,9 @@
   "private": true,
   "dependencies": {
     "bootstrap": "^4.6.0",
+    "ipfs-api": "^26.1.2",
+    "ipfs-http-client": "^49.0.4",
+    "ipfs-mini": "^1.1.5",
     "pull-file-reader": "^1.0.2",
     "react": "16.11.0",
     "react-dom": "16.11.0",
