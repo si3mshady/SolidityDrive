@@ -39,7 +39,7 @@ async function init () {
 
     // Set web3, accounts, and contract to the state, and then proceed with an
     // example of interacting with the contract's methods.
-    setProperties(prev => ({ ...prev, web3:web3, accounts:accounts, instance: instance }));
+    setProperties(prev => ({ ...prev, web3:web3, accounts:accounts, contract: instance }));
     return true;
   } catch (error) {
     // Catch any errors for any of the above operations.
@@ -55,11 +55,6 @@ async function init () {
 }
 
 init()
-
-
-
-
-
 })
 
 
@@ -68,9 +63,9 @@ init()
     web3: null,
     accounts: [],
     contract: null,
-    hash: null,
-    name: null,
-    type: null,
+    hash: '',
+    name: '',
+    type: '',
     timestamp: null,
     result: null,
     url: null
@@ -81,14 +76,16 @@ const  getFiles = async () => {
     // need to get accounts and  contract
   
     try { 
+      
     const {accounts, contract } = properties;  
     console.log(accounts)
-    let filesLength = await contract.methods.getLength().call({from: this.state.accounts[0]});
+    let filesLength = await contract.methods.getLength().call({from: accounts[0]});
     let files = []
     for (let i = 0; i < filesLength; i++) {
       let file = await contract.methods.getFile(i).call({from: accounts[0]})
       files.push(file)
       console.log(file)
+      console.log(files)
     }} catch(err) {
       alert(err)
       console.log(err)
@@ -101,28 +98,31 @@ const  getFiles = async () => {
 
  const onDrop = async (data) => {
     try {
-      
+
+      console.log(properties)     
      
        var file = data
            
        var reader = new FileReader();
        reader.onloadend = async function() {
-         console.log('RESULT', reader.result)    
+        //  console.log('RESULT', reader.result)    
          const buff =  Buffer.from(reader.result.replace(/^data:image\/\w+;base64,/, ""),'base64')
          let result = await ipfs.add(buff, async (err,_hash) => {
            if (!err) {
+             console.log(_hash)
                       
-               const fileType = data.name.substr(data.name.lastIndexOf('.')+1)              
+               const fileType = data.name.substr(data.name.lastIndexOf('.')+1)     
+               console.log(data.name) 
+               console.log(fileType)        
                const ts = Math.round(+new Date()/ 1000)  
                const url = 'https://ipfs.infura.io/ipfs/' + _hash 
-               setProperties(prev => ({...prev, name: data.name, result: result, type: fileType, timestamp:ts, url:url }))
-               
-               let {result, accounts, hash, name, type, timestamp, contract } = properties
-               let uploaded  = await contract.methods.add(hash, name,fileType, timestamp).send({from: accounts[0], gas: 888 })
-  
-               // let uploaded  = await this.state.contract.methods.add(this.result[0].hash, data.name,this.state.type, this.state.timestamp).send({from: this.accounts[0], gas: 300000 })
-  
-                        
+              //  setProperties(prev => ({...prev, name: data.name, hash: _hash,  type: fileType, timestamp:ts, url:url }))
+              let {accounts, contract } = properties
+              console.log(properties)
+              let uploaded  = await contract.methods.add(_hash, data.name,fileType, ts).send({from: accounts[0], gas: 300000 })
+              console.log(uploaded)
+              getFiles()
+ 
   
               
            }
@@ -131,7 +131,7 @@ const  getFiles = async () => {
           
       }
        reader.readAsDataURL(file);
-  
+        
     } catch(err ) {
        console.log(err)
     }
