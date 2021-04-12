@@ -6,15 +6,17 @@ import {FileIcon, defaultStyles} from 'react-file-icon'
 import "bootstrap/dist/css/bootstrap.css"
 import "react-drop-zone/dist/styles.css"
 import getWeb3 from "./getWeb3";
-// import fileReaderPullStream from 'pull-file-reader'
+import Moment from 'moment'
+import fileReaderPullStream from 'pull-file-reader'
 import IPFS from 'ipfs-mini'
 import "./App.css";
-
+// import ipfs from './utils/ipfs.js'
+import axios from 'axios'
 
 const ipfs = new IPFS({
   host: 'ipfs.infura.io',
-  port: 5001,
-  protocol: 'https'
+      port: 5001,
+      protocol: 'https'
   
 })
 
@@ -57,7 +59,7 @@ async function init () {
 init()
 })
 
-
+  const [fileList, setFileList] = useState([])
   const [properties, setProperties ] = useState({ 
     solidityDrive : [],
     web3: null,
@@ -78,15 +80,20 @@ const  getFiles = async () => {
     try { 
       
     const {accounts, contract } = properties;  
-    console.log(accounts)
+    console.log(properties)
     let filesLength = await contract.methods.getLength().call({from: accounts[0]});
     let files = []
     for (let i = 0; i < filesLength; i++) {
+      //calling the 'getFile' method on the actual smart contract 
       let file = await contract.methods.getFile(i).call({from: accounts[0]})
+      // pushing 
       files.push(file)
       console.log(file)
       console.log(files)
-    }} catch(err) {
+      setFileList(prev => [file , ...prev])
+    }
+  
+  } catch(err) {
       alert(err)
       console.log(err)
     }
@@ -96,31 +103,29 @@ const  getFiles = async () => {
   
 
 
- const onDrop = async (data) => {
+  const onDrop = async (data) => {
     try {
 
       console.log(properties)     
      
-       var file = data
-           
+    var file = data
+
        var reader = new FileReader();
        reader.onloadend = async function() {
-        //  console.log('RESULT', reader.result)    
-         const buff =  Buffer.from(reader.result.replace(/^data:image\/\w+;base64,/, ""),'base64')
-         let result = await ipfs.add(buff, async (err,_hash) => {
+       // creates a stream of bytes to write data to memory 
+        const buff =  Buffer.from(reader.result.replace(/^data:image\/\w+;base64,/, ""),'base64')
+
+         const result = await ipfs.add(buff, async (err,_hash) => {
            if (!err) {
-             console.log(_hash)
+            
                       
-               const fileType = data.name.substr(data.name.lastIndexOf('.')+1)     
-               console.log(data.name) 
-               console.log(fileType)        
-               const ts = Math.round(+new Date()/ 1000)  
-               const url = 'https://ipfs.infura.io/ipfs/' + _hash 
-              //  setProperties(prev => ({...prev, name: data.name, hash: _hash,  type: fileType, timestamp:ts, url:url }))
-              let {accounts, contract } = properties
-              console.log(properties)
+              const fileType = data.name.substr(data.name.lastIndexOf('.')+1)                   
+              const ts = Math.round(+new Date()/ 1000)  
+              const url = 'https://ipfs.infura.io/ipfs/' + _hash 
+              setProperties(prev => ({...prev, name: data.name, hash: _hash,  type: fileType, timestamp:ts, url:url }))
+              let {accounts, contract } = properties              
               let uploaded  = await contract.methods.add(_hash, data.name,fileType, ts).send({from: accounts[0], gas: 300000 })
-              console.log(uploaded)
+              
               getFiles()
  
   
@@ -155,11 +160,24 @@ const  getFiles = async () => {
           </thead>
           <tbody>
 
-            <tr>
-              <th><FileIcon size={30} extension="docx" {...defaultStyles}/> </th>
-              <th className="text-left">File name.docx</th>
-              <th className="text-right">4-11-2021</th>
-            </tr>
+           
+            {
+
+              fileList.map((prop, index) => (
+                <tr>
+                    <th><FileIcon key={prop.timestamp} size={30} extension={prop[2]} {...defaultStyles[2]}/> </th>
+                    <th className="text-left" key={prop.timestamp}><a href={'https://ipfs.io/ipfs/' + prop[0]}>{prop[1]}</a></th>
+                    <th className="text-right" key={prop.timestamp}>
+                    
+                    {/* <Moment format="YYYY/MM/DD" unix> {prop[3]}   </Moment> */}
+                             
+                    </th>
+                </tr>
+              ))
+            }
+              
+            
+           
 
           </tbody>
         </Table>
@@ -169,3 +187,6 @@ const  getFiles = async () => {
   );
 }
 
+// https://discuss.ipfs.io/t/add-api-file-argument-path-is-required/2404
+
+// curl -F "file=@./dog.txt" "http://localhost:5001/api/v0/add"

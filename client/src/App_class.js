@@ -6,9 +6,10 @@ import {FileIcon, defaultStyles} from 'react-file-icon'
 import "bootstrap/dist/css/bootstrap.css"
 import "react-drop-zone/dist/styles.css"
 import getWeb3 from "./getWeb3";
-// import fileReaderPullStream from 'pull-file-reader'
+import fileReaderPullStream from 'pull-file-reader'
 import IPFS from 'ipfs-mini'
 import "./App.css";
+import axios from 'axios'
 
 
 const ipfs = new IPFS({
@@ -89,41 +90,57 @@ onDrop = async (data) => {
      
     
       var file = data
-          
-      var reader = new FileReader();
-      reader.onloadend = async function() {
-        console.log('RESULT', reader.result)    
-        const buff =  Buffer.from(reader.result.replace(/^data:image\/\w+;base64,/, ""),'base64')
-        let result = await ipfs.add(buff, async (err,_hash) => {
-          if (!err) {
-              // console.log(hash)
-              // where the magic happens 
-              // one liner for unix timestamp
-              const fileType = data.name.substr(data.name.lastIndexOf('.')+1)              
-              const timestamp = Math.round(+new Date()/ 1000)  
-              const url = 'https://ipfs.infura.io/ipfs/' + _hash 
-              // this.setState({
-              //   type:fileType, 
-              //   result: result,
-              //   name: data.name,
-              //   hash: _hash,
-              //   url: url,
-              //   timestamp: timestamp
-              // })
-              console.log(this.state.contract)
-              // let uploaded  = await this.contract.methods.add(result[0].hash, data.name,fileType, timestamp).send({from: this.state.accounts[0], gas: 888 })
+      var stream = fileReaderPullStream(data)
+      const response = await fetch("http://localhost:5001/api/v0/add/", {
+            method: "POST",
+            mode: "cors",
+            headers: {               
+                "Allow": "*"
+            },
+            body: stream
+              });
+      console.log(response.json())
+      const result = await ipfs.add(stream);
+      const fileType = data.name.substr(data.name.lastIndexOf('.')+1)              
+      const timestamp = Math.round(+new Date()/ 1000)  
+      let uploaded  = await this.contract.methods.add(result[0].hash, data.name,fileType, timestamp).send({from: this.state.accounts[0], gas: 888 })
+      console.log(uploaded);
+      getF
 
-              // let uploaded  = await this.state.contract.methods.add(this.result[0].hash, data.name,this.state.type, this.state.timestamp).send({from: this.accounts[0], gas: 300000 })
+    //   var reader = new FileReader();
+    //   reader.onloadend = async function() {
+    //     console.log('RESULT', reader.result)    
+    //     const buff =  Buffer.from(reader.result.replace(/^data:image\/\w+;base64,/, ""),'base64')
+    //     let result = await ipfs.add(buff, async (err,_hash) => {
+    //       if (!err) {
+    //           // console.log(hash)
+    //           // where the magic happens 
+    //           // one liner for unix timestamp
+    //           const fileType = data.name.substr(data.name.lastIndexOf('.')+1)              
+    //           const timestamp = Math.round(+new Date()/ 1000)  
+    //           const url = 'https://ipfs.infura.io/ipfs/' + _hash 
+    //           // this.setState({
+    //           //   type:fileType, 
+    //           //   result: result,
+    //           //   name: data.name,
+    //           //   hash: _hash,
+    //           //   url: url,
+    //           //   timestamp: timestamp
+    //           // })
+    //           console.log(this.state.contract)
+    //           // 
+
+    //           // let uploaded  = await this.state.contract.methods.add(this.result[0].hash, data.name,this.state.type, this.state.timestamp).send({from: this.accounts[0], gas: 300000 })
 
                        
 
              
-          }
+    //       }
   
-        })
+    //     })
          
-     }
-      reader.readAsDataURL(file);
+    //  }
+    //   reader.readAsDataURL(file);
 
 
 
