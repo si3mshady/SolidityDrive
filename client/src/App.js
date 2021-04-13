@@ -23,6 +23,25 @@ const ipfs = new IPFS({
 
 export default function App() {
 
+
+  const [fileList, setFileList] = useState([])
+  const [acct, getAccts] = useState([])
+  const [properties, setProperties ] = useState({ 
+    solidityDrive : [],
+    web3: null,
+    accounts: [],
+    contract: null,
+    hash: '',
+    name: '',
+    type: '',
+    timestamp: null,
+    result: null,
+    url: null
+  })
+
+
+ 
+
 useEffect(  () => {
 
 async function init () {
@@ -38,10 +57,10 @@ async function init () {
       SolidityDriveContract.abi,
       deployedNetwork && deployedNetwork.address,
     );
-
-    // Set web3, accounts, and contract to the state, and then proceed with an
-    // example of interacting with the contract's methods.
     setProperties(prev => ({ ...prev, web3:web3, accounts:accounts, contract: instance }));
+
+
+
     return true;
   } catch (error) {
     // Catch any errors for any of the above operations.
@@ -57,21 +76,12 @@ async function init () {
 }
 
 init()
-})
+}, [fileList])
 
-  const [fileList, setFileList] = useState([])
-  const [properties, setProperties ] = useState({ 
-    solidityDrive : [],
-    web3: null,
-    accounts: [],
-    contract: null,
-    hash: '',
-    name: '',
-    type: '',
-    timestamp: null,
-    result: null,
-    url: null
-  })
+useEffect(() => {
+    
+
+})
 
 
 const  getFiles = async () => {
