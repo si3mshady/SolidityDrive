@@ -85,6 +85,7 @@ getFiles = async () => {
  
 }
 
+// study this 
 onDrop = async (data) => {
    try {
      
